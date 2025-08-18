@@ -47,15 +47,16 @@ public class IFNE extends gov.nasa.jpf.jvm.bytecode.IFNE {
             return super.execute(ti);
         } else { // the condition is symbolic
 
-            String[] dp = SymbolicInstructionFactory.dp;
+//            String[] dp = SymbolicInstructionFactory.dp;
 
             ChoiceGenerator<?> cg;
 
             if (!ti.isFirstStepInsn()) { // first time around
                 if (SymbolicInstructionFactory.collect_constraints)
                     cg = new PCChoiceGenerator(1);
-                else if (dp[0].equalsIgnoreCase("omega")) // hack because omega does not handle not or or correctly
-                    cg = new PCChoiceGenerator(3);
+//                TODO: do we support omega ?
+//                else if (dp[0].equalsIgnoreCase("omega")) // hack because omega does not handle not or or correctly
+//                    cg = new PCChoiceGenerator(3);
                 else
                     cg = new PCChoiceGenerator(2);
                 ((PCChoiceGenerator) cg).setOffset(this.position);
@@ -93,14 +94,14 @@ public class IFNE extends gov.nasa.jpf.jvm.bytecode.IFNE {
             assert pc != null;
 
             if (conditionValue) {
-                if (dp[0].equalsIgnoreCase("omega")) {// hack
-                    if ((Integer) cg.getNextChoice() == 1)
-                        pc._addDet(Comparator.GT, sym_v, 0);
-                    else {// 2
-                        assert ((Integer) cg.getNextChoice() == 2);
-                        pc._addDet(Comparator.LT, sym_v, 0);
-                    }
-                } else
+//                if (dp[0].equalsIgnoreCase("omega")) {// hack
+//                    if ((Integer) cg.getNextChoice() == 1)
+//                        pc._addDet(Comparator.GT, sym_v, 0);
+//                    else {// 2
+//                        assert ((Integer) cg.getNextChoice() == 2);
+//                        pc._addDet(Comparator.LT, sym_v, 0);
+//                    }
+//                } else
                     pc._addDet(Comparator.NE, sym_v, 0);
                 if (!pc.simplify()) {// not satisfiable
                     ti.getVM().getSystemState().setIgnored(true);

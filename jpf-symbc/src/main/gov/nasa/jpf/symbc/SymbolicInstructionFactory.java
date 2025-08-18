@@ -29,6 +29,10 @@ import gov.nasa.jpf.util.ClassInfoFilter;
 import gov.nasa.jpf.vm.ClassInfo;
 import gov.nasa.jpf.vm.Instruction;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 
 public class SymbolicInstructionFactory extends gov.nasa.jpf.jvm.bytecode.InstructionFactory {
 
@@ -538,7 +542,7 @@ public class SymbolicInstructionFactory extends gov.nasa.jpf.jvm.bytecode.Instru
 		  return (filter.isPassing(ci) ? new MULTIANEWARRAY(clsName,dimensions) : super.multianewarray(clsName,dimensions));
 	      }
 
-	static public String[] dp;
+	static public Set<String> dp;
 	static public int dpTimeout;
 
 	/* Symbolic String configuration */
@@ -631,7 +635,8 @@ public class SymbolicInstructionFactory extends gov.nasa.jpf.jvm.bytecode.Instru
 		 greenSolver = new Green();
 		 new Configuration(greenSolver, conf).configure();			
 		 // fix to make sure when Green is used there is no NPE when poking at dp[0] in some bytecodes
-		 dp = new String[] {"green"};
+		 dp = new HashSet<>();
+		 dp.add("green");
 	 }
 	
 	
@@ -661,23 +666,38 @@ public class SymbolicInstructionFactory extends gov.nasa.jpf.jvm.bytecode.Instru
 			System.out.println("Using Green Framework...");
 			setupGreen(conf);
 		} else {
-			dp = conf.getStringArray("symbolic.dp");
-			if (dp == null) {
-				dp = new String[1];
-				dp[0] = "choco";
+			dp = conf.getStringSet("symbolic.dp");
+			if (dp.isEmpty()) {
+				dp.add("choco");
+			} else {
+//				convert all values in dp to lower case
+				dp = dp.stream().map(String::toLowerCase).collect(Collectors.toSet());
 			}
-			if (debugMode) System.out.println("symbolic.dp="+dp[0]);
+
+			if (dp.contains("no_solver") && dp.size() > 1) {
+				throw new IllegalArgumentException("The 'no_solver' option cannot be used together with other solvers/options.");
+			}
+
+			if (dp.contains("compare") && dp.size() > 1) {
+				throw new IllegalArgumentException("The 'compare' option cannot be used together with other solvers/options.");
+			}
+
+			if (dp.contains("debug") && dp.size() > 1) {
+				throw new IllegalArgumentException("The 'debug' option cannot be used together with other solvers/options.");
+			}
+
+			if (debugMode) System.out.println("symbolic.dp="+dp);
 
 			if (conf.hasValue("symbolic.dp_timeout_ms")) {
 
-				if (dp[0].equalsIgnoreCase("coral") ||
-						dp[0].equalsIgnoreCase("iasolver") ||
-						dp[0].equalsIgnoreCase("cvc3") ||
-						dp[0].equalsIgnoreCase("cvc3bitvec") ||
-						dp[0].equalsIgnoreCase("yices")
+				if (dp.contains("coral") ||
+						dp.contains("iasolver") ||
+						dp.contains("cvc3") ||
+						dp.contains("cvc3bitvec") ||
+						dp.contains("yices")
 				) {
 					throw new UnsupportedOperationException(
-							"The solver '" + dp[0] + "' does not support the configuration option " +
+							"The solver '" + dp + "' does not support the configuration option " +
 									"'symbolic.dp_timeout_ms'. Please disable this option or switch to a solver that " +
 									"supports timeouts."
 					);
@@ -692,11 +712,11 @@ public class SymbolicInstructionFactory extends gov.nasa.jpf.jvm.bytecode.Instru
 			}
 
 			if (debugMode) {
-				if (!(dp[0].equalsIgnoreCase("coral") ||
-						dp[0].equalsIgnoreCase("iasolver") ||
-						dp[0].equalsIgnoreCase("cvc3") ||
-						dp[0].equalsIgnoreCase("cvc3bitvec") ||
-						dp[0].equalsIgnoreCase("yices"))) {
+				if (!(dp.contains("coral") ||
+						dp.contains("iasolver") ||
+						dp.contains("cvc3") ||
+						dp.contains("cvc3bitvec") ||
+						dp.contains("yices"))) {
 					// inform only if the dp[0] supports timeout
 					System.out.println("symbolic.dp_timeout_ms=" + dpTimeout);
 				}
@@ -790,7 +810,7 @@ public class SymbolicInstructionFactory extends gov.nasa.jpf.jvm.bytecode.Instru
 			}
 
 			//load CORAL's parameters
-			if (dp[0].equalsIgnoreCase("coral") || dp[0].equalsIgnoreCase("debug") || dp[0].equalsIgnoreCase("compare")) {
+			if (dp.contains("coral") || dp.contains("debug") || dp.contains("compare")) {
 				ProblemCoral.configure(conf);
 			}
 
