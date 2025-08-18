@@ -74,7 +74,8 @@ public class SymbolicConstraintsGeneral {
 
         // if (SymbolicInstructionFactory.debugMode)
         // System.out.println("checking: PC "+pc);
-
+        result = null;
+        resultSolver = null;
         solvers = new ArrayList<>();
         Set<String> dp = SymbolicInstructionFactory.dp;
         for (String s : dp) {
@@ -115,7 +116,7 @@ public class SymbolicConstraintsGeneral {
                 return true;
             } else
                 throw new RuntimeException(
-                        "## Error: unknown decision procedure symbolic.dp=" + dp + "\n(use choco or IAsolver or CVC3)");
+                        "## Error: unknown decision procedure symbolic.dp=" + s + "\n(use choco or IAsolver or CVC3)");
 
         }
 
@@ -147,8 +148,15 @@ public class SymbolicConstraintsGeneral {
                     }
 
                     result = resultSolver.solve();
-                }
 
+                    // skip if choco returns a UNSAT/false
+                    if (resultSolver instanceof ProblemChoco && result == false) {
+                        result = null;
+                        continue;
+                    }
+                }
+                // Once a solver successfully parses and returns a result (SAT/UNSAT),
+                // we stop trying further solvers and break out of the loop.
                 break;
             } catch (Exception e) {
                     if (SymbolicInstructionFactory.debugMode) {
