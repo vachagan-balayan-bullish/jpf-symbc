@@ -212,6 +212,7 @@ public class SymbolicConstraintsGeneral {
     }
 
     public void cleanup() {
+        if (solvers == null) return;
         for (ProblemGeneral pb : solvers) {
             if (pb instanceof ProblemCVC3) {
                 ((ProblemCVC3) pb).cleanup();
