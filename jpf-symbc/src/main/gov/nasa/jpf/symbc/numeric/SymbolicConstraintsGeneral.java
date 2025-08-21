@@ -41,15 +41,21 @@ import gov.nasa.jpf.symbc.Observations;
 import gov.nasa.jpf.symbc.SymbolicInstructionFactory;
 import gov.nasa.jpf.symbc.numeric.solvers.*;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 import java.util.Map.Entry;
+import java.util.List;
+import java.util.ArrayList;
+
 
 // generalized to use different constraint solvers/decision procedures
 // Warning: should never use / modify the types from pb:
 // types come in and out of each particular dp !!!!!!!!!!!!!!!
 
 public class SymbolicConstraintsGeneral {
-    List<ProblemGeneral> solvers;
+    protected List<ProblemGeneral> solvers;
     protected ProblemGeneral resultSolver;
     protected Boolean result; // tells whether result is satisfiable or not
 
@@ -77,7 +83,7 @@ public class SymbolicConstraintsGeneral {
         result = null;
         resultSolver = null;
         solvers = new ArrayList<>();
-        Set<String> dp = SymbolicInstructionFactory.dp;
+        List<String> dp = SymbolicInstructionFactory.dp;
         for (String s : dp) {
             if (s.equals("choco")) {
                 solvers.add(new ProblemChoco());
@@ -134,8 +140,7 @@ public class SymbolicConstraintsGeneral {
                 ProblemGeneral tempPb = PCParser.parse(pc, resultSolver);
 
                 if (tempPb == null) {
-                    // skip the current solver if parsing fails
-                    continue;
+                    result = Boolean.FALSE;
                 } else {
                     resultSolver = tempPb;
 
@@ -149,7 +154,7 @@ public class SymbolicConstraintsGeneral {
 
                     result = resultSolver.solve();
 
-                    // skip if choco returns a UNSAT/false
+                    // skip if choco returns an UNSAT/false
                     if (resultSolver instanceof ProblemChoco && result == false) {
                         result = null;
                         continue;
@@ -235,7 +240,7 @@ public class SymbolicConstraintsGeneral {
         if (pc == null || pc.count == 0)
             return true;
 
-        Set<String> dp = SymbolicInstructionFactory.dp;
+        List<String> dp = SymbolicInstructionFactory.dp;
         if (dp.contains("no_solver"))
             return true;
 
@@ -347,7 +352,7 @@ public class SymbolicConstraintsGeneral {
             return result;
         }
 
-        Set<String> dp = SymbolicInstructionFactory.dp;
+        List<String> dp = SymbolicInstructionFactory.dp;
         if (dp.contains("no_solver")) {
             return result;
         }

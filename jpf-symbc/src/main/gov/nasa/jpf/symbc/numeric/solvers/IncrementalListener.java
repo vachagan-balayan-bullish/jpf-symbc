@@ -27,14 +27,14 @@ import gov.nasa.jpf.symbc.numeric.PCChoiceGenerator;
 import gov.nasa.jpf.vm.ChoiceGenerator;
 import gov.nasa.jpf.vm.VM;
 
-import java.util.Set;
+import java.util.List;
 
 public class IncrementalListener extends PropertyListenerAdapter {
   
   public static IncrementalSolver solver;
   
   public IncrementalListener(Config config, JPF jpf) {
-    Set<String> stringDp = SymbolicInstructionFactory.dp;
+    List<String> stringDp = SymbolicInstructionFactory.dp;
     if(stringDp.contains("z3inc")){
       solver = new ProblemZ3Incremental();
     }  else if(stringDp.contains("z3bitvectorinc")){

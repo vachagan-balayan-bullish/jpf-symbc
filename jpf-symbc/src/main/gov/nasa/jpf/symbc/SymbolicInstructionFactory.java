@@ -29,8 +29,9 @@ import gov.nasa.jpf.util.ClassInfoFilter;
 import gov.nasa.jpf.vm.ClassInfo;
 import gov.nasa.jpf.vm.Instruction;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Arrays;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 
@@ -542,7 +543,7 @@ public class SymbolicInstructionFactory extends gov.nasa.jpf.jvm.bytecode.Instru
 		  return (filter.isPassing(ci) ? new MULTIANEWARRAY(clsName,dimensions) : super.multianewarray(clsName,dimensions));
 	      }
 
-	static public Set<String> dp;
+	static public List<String> dp;
 	static public int dpTimeout;
 
 	/* Symbolic String configuration */
@@ -635,7 +636,7 @@ public class SymbolicInstructionFactory extends gov.nasa.jpf.jvm.bytecode.Instru
 		 greenSolver = new Green();
 		 new Configuration(greenSolver, conf).configure();			
 		 // fix to make sure when Green is used there is no NPE when poking at dp[0] in some bytecodes
-		 dp = new HashSet<>();
+		 dp = new ArrayList<>();
 		 dp.add("green");
 	 }
 	
@@ -666,12 +667,16 @@ public class SymbolicInstructionFactory extends gov.nasa.jpf.jvm.bytecode.Instru
 			System.out.println("Using Green Framework...");
 			setupGreen(conf);
 		} else {
-			dp = conf.getStringSet("symbolic.dp");
+			String[] dpArr = conf.getStringArray("symbolic.dp");
+			if (dpArr == null) dp = new ArrayList<>();
+			else {
+				dp = Arrays.asList(dpArr);
+			}
 			if (dp.isEmpty()) {
 				dp.add("choco");
 			} else {
-//				convert all values in dp to lower case
-				dp = dp.stream().map(String::toLowerCase).collect(Collectors.toSet());
+//				convert all unique values in dp to lower case while maintaining the order
+				dp = dp.stream().map(String::toLowerCase).distinct().collect(Collectors.toList());
 			}
 
 			if (dp.contains("no_solver") && dp.size() > 1) {

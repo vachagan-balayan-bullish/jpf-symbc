@@ -673,7 +673,7 @@ public class SymbolicListener extends PropertyListenerAdapter implements Publish
     // -------- the publisher interface
     @Override
     public void publishFinished(Publisher publisher) {
-        Set<String> dp = SymbolicInstructionFactory.dp;
+        List<String> dp = SymbolicInstructionFactory.dp;
         if (dp.contains("no_solver") || dp.contains("cvc3bitvec"))
             return;
 
