@@ -36,7 +36,7 @@ trap "rm -rf $DIR" EXIT
 
 mkdir -p $DIR/target/classes
 
-$JAVA_HOME/bin/javac -g -cp $CLASSPATH_ADDED:$DIR/target/classes -d $DIR/target/classes "${BM[@]}"
+/usr/lib/jvm/java-8-openjdk-amd64/bin/javac -g -cp $CLASSPATH_ADDED:$DIR/target/classes -d $DIR/target/classes "${BM[@]}"
 
 # create configuration file
 echo "target=Main" > $DIR/config.jpf
@@ -60,7 +60,7 @@ echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
 if test -z "$JVM_FLAGS"; then
   JVM_FLAGS="-Xmx1024m -ea"
 fi
-$JAVA_HOME/bin/java $JVM_FLAGS -jar $(pwd)/jpf-core/build/RunJPF.jar $DIR/config.jpf | tee $LOG
+/usr/lib/jvm/java-8-openjdk-amd64/bin/java $JVM_FLAGS -jar $(pwd)/jpf-core/build/RunJPF.jar $DIR/config.jpf | tee $LOG
 
 # check the result
 grep "no errors detected" $LOG > /dev/null
