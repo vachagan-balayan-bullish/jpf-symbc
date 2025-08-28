@@ -673,7 +673,8 @@ public class SymbolicInstructionFactory extends gov.nasa.jpf.jvm.bytecode.Instru
 				dp = Arrays.asList(dpArr);
 			}
 			if (dp.isEmpty()) {
-				dp.add("choco");
+//				use z3 as the default solver
+				dp.add("z3");
 			} else {
 //				convert all unique values in dp to lower case while maintaining the order
 				dp = dp.stream().map(String::toLowerCase).distinct().collect(Collectors.toList());
@@ -689,6 +690,19 @@ public class SymbolicInstructionFactory extends gov.nasa.jpf.jvm.bytecode.Instru
 
 			if (dp.contains("debug") && dp.size() > 1) {
 				throw new IllegalArgumentException("The 'debug' option cannot be used together with other solvers/options.");
+			}
+
+			if (dp.contains("choco")) {
+				int safeMin = Integer.MIN_VALUE / 100;
+				int safeMax = Integer.MAX_VALUE / 100;
+
+				System.err.printf(
+						"WARNING: Choco solver is enabled.%n" +
+								"   - Choco works with reduced integer ranges: [%d, %d].%n" +
+								"   - UNSAT results may be UNSOUND for verification.%n" +
+								"   - Use with caution, especially in verification tasks.%n",
+						safeMin, safeMax
+				);
 			}
 
 			if (debugMode) System.out.println("symbolic.dp="+dp);

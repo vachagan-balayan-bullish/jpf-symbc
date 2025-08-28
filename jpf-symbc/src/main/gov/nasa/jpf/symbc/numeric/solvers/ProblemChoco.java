@@ -66,11 +66,18 @@ public class ProblemChoco extends ProblemGeneral {
 		// to avoid arithmetic overflows during constraint propagation.
 		// Reference: Choco 4.0.5 User Guide, Page 6
 		// https://www.dcs.gla.ac.uk/~pat/cpM/choco4/user_guide-4.0.5.pdf
-		if (min < (Integer.MIN_VALUE / 100) || max > (Integer.MAX_VALUE / 100)) {
-			throw new IllegalArgumentException(String.format(
-					"## Error Choco Invalid bounds for '%s': [%d, %d] exceed safe range [%d, %d] for Choco.",
-					name, min, max, Integer.MIN_VALUE / 100, Integer.MAX_VALUE / 100
-			));
+		int safeMin = Integer.MIN_VALUE / 100;
+		int safeMax = Integer.MAX_VALUE / 100;
+		if (min < safeMin || max > safeMax) {
+			if (SymbolicInstructionFactory.debugMode) {
+				System.err.printf(
+						"WARNING: Range [%d, %d] for '%s' exceeds Choco safe bounds [%d, %d]. "
+								+ "Adjusting to safe range for Choco solver.%n",
+						min, max, name, safeMin, safeMax
+				);
+			}
+			min = Math.max(min, safeMin);
+			max = Math.min(max, safeMax);
 		}
 		return pb.makeBoundIntVar(name, (int) min, (int) max);
 	}

@@ -154,8 +154,8 @@ public class SymbolicConstraintsGeneral {
 
                     result = resultSolver.solve();
 
-                    // skip if choco returns an UNSAT/false
-                    if (resultSolver instanceof ProblemChoco && result == false) {
+                    // skip if choco returns an UNSAT/false if more than one solver is used
+                    if (solvers.size() > 1 && resultSolver instanceof ProblemChoco && result == false) {
                         result = null;
                         continue;
                     }
