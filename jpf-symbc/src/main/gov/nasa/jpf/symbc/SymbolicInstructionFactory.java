@@ -542,7 +542,9 @@ public class SymbolicInstructionFactory extends gov.nasa.jpf.jvm.bytecode.Instru
 	  public Instruction multianewarray(String clsName, int dimensions){
 		  return (filter.isPassing(ci) ? new MULTIANEWARRAY(clsName,dimensions) : super.multianewarray(clsName,dimensions));
 	      }
-
+	/*
+	 * List of available decision procedures (DP)/solvers used for solving path conditions.
+	 */
 	static public List<String> dp;
 	static public int dpTimeout;
 

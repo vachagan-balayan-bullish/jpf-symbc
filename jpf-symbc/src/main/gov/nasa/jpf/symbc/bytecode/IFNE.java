@@ -56,7 +56,6 @@ public class IFNE extends gov.nasa.jpf.jvm.bytecode.IFNE {
             if (!ti.isFirstStepInsn()) { // first time around
                 if (SymbolicInstructionFactory.collect_constraints)
                     cg = new PCChoiceGenerator(1);
-//                TODO: do we support omega ?
                 else if (dp.contains("omega")) // hack because omega does not handle not or or correctly
                     cg = new PCChoiceGenerator(3);
                 else
@@ -96,7 +95,6 @@ public class IFNE extends gov.nasa.jpf.jvm.bytecode.IFNE {
             assert pc != null;
 
             if (conditionValue) {
-//                TODO: do we still support omega solver ?
                 if (dp.contains("omega")) {// hack
                     if ((Integer) cg.getNextChoice() == 1)
                         pc._addDet(Comparator.GT, sym_v, 0);

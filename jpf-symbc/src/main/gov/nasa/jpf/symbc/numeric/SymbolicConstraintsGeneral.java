@@ -55,9 +55,20 @@ import java.util.ArrayList;
 // types come in and out of each particular dp !!!!!!!!!!!!!!!
 
 public class SymbolicConstraintsGeneral {
+    /**
+     * List of all solvers that will be used to try solving a path condition.
+     */
     protected List<ProblemGeneral> solvers;
+    /**
+     * The solver that successfully solved the current path condition.
+     * It is guaranteed to be one of the solvers in {@link #solvers}.
+     */
     protected ProblemGeneral resultSolver;
-    protected Boolean result; // tells whether result is satisfiable or not
+    /**
+     * Indicates whether the result of solving the path condition is satisfiable.
+     * <code>true</code> if satisfiable, <code>false</code> otherwise.
+     */
+    protected Boolean result;
 
     public boolean isSatisfiable(PathCondition pc) {
         if (pc == null || pc.count == 0) {
@@ -126,24 +137,17 @@ public class SymbolicConstraintsGeneral {
 
         }
 
-
-
         for(int i = 0; i < solvers.size(); i++) {
             resultSolver = solvers.get(i);
-
             if (SymbolicInstructionFactory.debugMode) {
                 System.out.println("Using solver: " + resultSolver.getClass().getSimpleName());
             }
-
             try {
-
                 ProblemGeneral tempPb = PCParser.parse(pc, resultSolver);
-
                 if (tempPb == null) {
                     result = Boolean.FALSE;
                 } else {
                     resultSolver = tempPb;
-
                     // YN: z3 optimize
                     if (Observations.lastObservedSymbolicExpression != null) {
                         if (resultSolver instanceof ProblemZ3Optimize) {
@@ -151,9 +155,7 @@ public class SymbolicConstraintsGeneral {
                                     PCParser.getExpression((IntegerExpression) Observations.lastObservedSymbolicExpression));
                         }
                     }
-
                     result = resultSolver.solve();
-
                     // skip if choco returns an UNSAT/false if more than one solver is used
                     if (solvers.size() > 1 && resultSolver instanceof ProblemChoco && result == false) {
                         result = null;
