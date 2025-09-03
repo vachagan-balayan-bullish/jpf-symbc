@@ -41,6 +41,7 @@ import gov.nasa.jpf.symbc.Observations;
 import gov.nasa.jpf.symbc.SPFException;
 import gov.nasa.jpf.symbc.SymbolicInstructionFactory;
 import gov.nasa.jpf.symbc.numeric.solvers.*;
+import javafx.util.Pair;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -138,42 +139,9 @@ public class SymbolicConstraintsGeneral {
 
         }
 
-        for(int i = 0; i < solvers.size(); i++) {
-            resultSolver = solvers.get(i);
-            if (SymbolicInstructionFactory.debugMode) {
-                System.out.println("Using solver: " + resultSolver.getClass().getSimpleName());
-            }
-            try {
-                ProblemGeneral tempPb = PCParser.parse(pc, resultSolver);
-                if (tempPb == null) {
-                    result = Boolean.FALSE;
-                } else {
-                    resultSolver = tempPb;
-                    // YN: z3 optimize
-                    if (Observations.lastObservedSymbolicExpression != null) {
-                        if (resultSolver instanceof ProblemZ3Optimize) {
-                            ((ProblemZ3Optimize) resultSolver).maximize(
-                                    PCParser.getExpression((IntegerExpression) Observations.lastObservedSymbolicExpression));
-                        }
-                    }
-                    result = resultSolver.solve();
-                    // skip if choco returns an UNSAT/false if more than one solver is used
-                    if (solvers.size() > 1 && resultSolver instanceof ProblemChoco && result == false) {
-                        result = null;
-                        continue;
-                    }
-                }
-                // Once a solver successfully parses and returns a result (SAT/UNSAT),
-                // we stop trying further solvers and break out of the loop.
-                break;
-            } catch (Exception e) {
-                    if (SymbolicInstructionFactory.debugMode) {
-                        System.out.println("Exception in parsing or solving with solver"
-                            + resultSolver.getClass().getSimpleName() + ":" + e
-                        );
-                    }
-            }
-        }
+        Pair<Boolean, ProblemGeneral> pair = checkPathConditionSequentially(pc);
+        result = pair.getKey();
+        resultSolver = pair.getValue();
 
         if (result == null) {
             throw new SPFException("Error: no solver could parse or solve the path condition: " + pc + "\n");
@@ -195,6 +163,54 @@ public class SymbolicConstraintsGeneral {
             return false;
         }
 
+    }
+
+    /**
+     * Try to solve the given PathCondition using the configured solvers sequentially.
+     * It stops as soon as one solver can parse and return a definite SAT/UNSAT result.
+     *
+     * When Choco is used with other solvers, its UNSAT is skipped
+     * because its limited integer range can give unsound UNSAT results.
+     *
+     * @param pc the PathCondition to solve
+     * @return a Pair of Boolean result and the solver instance that solved the PC.
+     **/
+    public Pair<Boolean, ProblemGeneral> checkPathConditionSequentially(PathCondition pc) {
+        Boolean res = null;
+        ProblemGeneral solver = null;
+        for(int i = 0; i < solvers.size() && res == null; i++) {
+            solver = solvers.get(i);
+            if (SymbolicInstructionFactory.debugMode) {
+                System.out.println("Using solver: " + solver.getClass().getSimpleName());
+            }
+            try {
+                ProblemGeneral tempPb = PCParser.parse(pc, solver);
+                if (tempPb == null) {
+                    res = Boolean.FALSE;
+                } else {
+                    // YN: z3 optimize
+                    if (Observations.lastObservedSymbolicExpression != null) {
+                        if (solver instanceof ProblemZ3Optimize) {
+                            ((ProblemZ3Optimize) solver).maximize(
+                                    PCParser.getExpression((IntegerExpression) Observations.lastObservedSymbolicExpression));
+                        }
+                    }
+                    res = solver.solve();
+                    // Choco uses a reduced integer range [-21474836, 21474836].
+                    // UNSAT results may be unsound for verification. skip when multiple solvers are available.
+                    if (solvers.size() > 1 && solver instanceof ProblemChoco && res == false) {
+                        res = null;
+                    }
+                }
+            } catch (Exception e) {
+                if (SymbolicInstructionFactory.debugMode) {
+                    System.out.println("Exception in parsing or solving with solver"
+                            + solver.getClass().getSimpleName() + ":" + e
+                    );
+                }
+            }
+        }
+        return new Pair<Boolean, ProblemGeneral>(res, solver);
     }
 
     public boolean isSatisfiableGreen(PathCondition pc) {

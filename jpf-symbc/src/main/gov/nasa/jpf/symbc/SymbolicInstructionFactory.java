@@ -701,8 +701,7 @@ public class SymbolicInstructionFactory extends gov.nasa.jpf.jvm.bytecode.Instru
 				System.err.printf(
 						"WARNING: Choco solver is enabled.%n" +
 								"   - Choco works with reduced integer ranges: [%d, %d].%n" +
-								"   - UNSAT results may be UNSOUND for verification.%n" +
-								"   - Use with caution, especially in verification tasks.%n",
+								"   - UNSAT results may be UNSOUND for verification.%n",
 						safeMin, safeMax
 				);
 			}
