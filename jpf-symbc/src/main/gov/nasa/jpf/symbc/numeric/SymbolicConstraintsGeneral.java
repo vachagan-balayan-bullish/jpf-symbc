@@ -38,6 +38,7 @@
 package gov.nasa.jpf.symbc.numeric;
 
 import gov.nasa.jpf.symbc.Observations;
+import gov.nasa.jpf.symbc.SPFException;
 import gov.nasa.jpf.symbc.SymbolicInstructionFactory;
 import gov.nasa.jpf.symbc.numeric.solvers.*;
 
@@ -175,7 +176,7 @@ public class SymbolicConstraintsGeneral {
         }
 
         if (result == null) {
-            throw new NoSolverSucceededException("Error: no solver could parse or solve the path condition: " + pc + "\n");
+            throw new SPFException("Error: no solver could parse or solve the path condition: " + pc + "\n");
         }
 
         if (SymbolicInstructionFactory.debugMode)
