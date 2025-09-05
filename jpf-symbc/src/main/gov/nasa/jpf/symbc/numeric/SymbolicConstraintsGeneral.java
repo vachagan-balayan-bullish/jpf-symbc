@@ -38,22 +38,39 @@
 package gov.nasa.jpf.symbc.numeric;
 
 import gov.nasa.jpf.symbc.Observations;
+import gov.nasa.jpf.symbc.SPFException;
 import gov.nasa.jpf.symbc.SymbolicInstructionFactory;
 import gov.nasa.jpf.symbc.numeric.solvers.*;
+import javafx.util.Pair;
 
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
+import java.util.List;
+import java.util.ArrayList;
+
 
 // generalized to use different constraint solvers/decision procedures
 // Warning: should never use / modify the types from pb:
 // types come in and out of each particular dp !!!!!!!!!!!!!!!
 
 public class SymbolicConstraintsGeneral {
-    protected ProblemGeneral pb;
-    protected Boolean result; // tells whether result is satisfiable or not
+    /**
+     * List of all solvers that will be used to try solving a path condition.
+     */
+    protected List<ProblemGeneral> solvers;
+    /**
+     * The solver that successfully solved the current path condition.
+     * It is guaranteed to be one of the solvers in {@link #solvers}.
+     */
+    protected ProblemGeneral resultSolver;
+    /**
+     * Indicates whether the result of solving the path condition is satisfiable.
+     * <code>true</code> if satisfiable, <code>false</code> otherwise.
+     */
+    protected Boolean result;
 
     public boolean isSatisfiable(PathCondition pc) {
         if (pc == null || pc.count == 0) {
@@ -76,71 +93,58 @@ public class SymbolicConstraintsGeneral {
 
         // if (SymbolicInstructionFactory.debugMode)
         // System.out.println("checking: PC "+pc);
-
-        String[] dp = SymbolicInstructionFactory.dp;
-        if (dp == null) { // default: use choco
-            pb = new ProblemChoco();
-        } else if (dp[0].equalsIgnoreCase("choco")) {
-            pb = new ProblemChoco();
-            // } else if(dp[0].equalsIgnoreCase("choco2")){
-            // pb = new ProblemChoco2();
-        } else if (dp[0].equalsIgnoreCase("coral")) {
-            pb = new ProblemCoral();
-        } else if (dp[0].equalsIgnoreCase("iasolver")) {
-            pb = new ProblemIAsolver();
-        } else if (dp[0].equalsIgnoreCase("cvc3")) {
-            pb = new ProblemCVC3();
-        } else if (dp[0].equalsIgnoreCase("cvc3bitvec")) {
-            pb = new ProblemCVC3BitVector();
-        } else if (dp[0].equalsIgnoreCase("yices")) {
-            pb = new ProblemYices();
-        } else if (dp[0].equalsIgnoreCase("z3")) {
-            pb = new ProblemZ3();
-        } else if (dp[0].equalsIgnoreCase("z3inc")) {
-            pb = new ProblemZ3Incremental();
-        } else if (dp[0].equalsIgnoreCase("z3bitvectorinc")) {
-            pb = new ProblemZ3BitVectorIncremental();
-        } else if (dp[0].equalsIgnoreCase("debug")) {
-            pb = new DebugSolvers(pc);
-        } else if (dp[0].equalsIgnoreCase("compare")) {
-            pb = new ProblemCompare(pc, this);
-        } else if (dp[0].equalsIgnoreCase("z3bitvector")) {
-            pb = new ProblemZ3BitVector();
-        } else if (dp[0].equalsIgnoreCase("z3optimize")) {
-            pb = new ProblemZ3Optimize();
-        }
-        // added option to have no-solving
-        // as a result symbolic execution will explore an over-approximation of the
-        // program paths
-        // equivalent to a CFG analysis
-        else if (dp[0].equalsIgnoreCase("no_solver")) {
-            return true;
-        } else
-            throw new RuntimeException(
-                    "## Error: unknown decision procedure symbolic.dp=" + dp[0] + "\n(use choco or IAsolver or CVC3)");
-
-        /*
-         * Parse path condition to solver. Note: do not override the actual pb
-         * variable in case the result is null. The cleanup afterwards will not
-         * work otherwise and the solver gets filled up with wrong assertions,
-         * e.g. with Z3.
-         */
-        ProblemGeneral tempPb = PCParser.parse(pc, pb);
-
-        if (tempPb == null)
-            result = Boolean.FALSE;
-        else {
-            pb = tempPb;
-
-            // YN: z3 optimize
-            if (Observations.lastObservedSymbolicExpression != null) {
-                if (pb instanceof ProblemZ3Optimize) {
-                    ((ProblemZ3Optimize) pb).maximize(
-                            PCParser.getExpression((IntegerExpression) Observations.lastObservedSymbolicExpression));
-                }
+        result = null;
+        resultSolver = null;
+        solvers = new ArrayList<>();
+        List<String> dp = SymbolicInstructionFactory.dp;
+        for (String s : dp) {
+            if (s.equals("choco")) {
+                solvers.add(new ProblemChoco());
+                // } else if(s.equals("choco2")){
+                // solvers.add(new ProblemChoco2();
+            } else if (s.equals("coral")) {
+                solvers.add(new ProblemCoral());
+            } else if (s.equals("iasolver")) {
+                solvers.add(new ProblemIAsolver());
+            } else if (s.equals("cvc3")) {
+                solvers.add(new ProblemCVC3());
+            } else if (s.equals("cvc3bitvec")) {
+                solvers.add(new ProblemCVC3BitVector());
+            } else if (s.equals("yices")) {
+                solvers.add(new ProblemYices());
+            } else if (s.equals("z3")) {
+                solvers.add(new ProblemZ3());
+            } else if (s.equals("z3inc")) {
+                solvers.add(new ProblemZ3Incremental());
+            } else if (s.equals("z3bitvectorinc")) {
+                solvers.add(new ProblemZ3BitVectorIncremental());
+            } else if (s.equals("debug")) {
+                solvers.add(new DebugSolvers(pc));
+            } else if (s.equals("compare")) {
+                solvers.add(new ProblemCompare(pc, this));
+            } else if (s.equals("z3bitvector")) {
+                solvers.add(new ProblemZ3BitVector());
+            } else if (s.equals("z3optimize")) {
+                solvers.add(new ProblemZ3Optimize());
             }
+            // added option to have no-solving
+            // as a result symbolic execution will explore an over-approximation of the
+            // program paths
+            // equivalent to a CFG analysis
+            else if (s.equals("no_solver")) {
+                return true;
+            } else
+                throw new RuntimeException(
+                        "## Error: unknown decision procedure symbolic.dp=" + s + "\n(use choco or IAsolver or CVC3)");
 
-            result = pb.solve();
+        }
+
+        Pair<Boolean, ProblemGeneral> pair = checkPathConditionSequentially(pc);
+        result = pair.getKey();
+        resultSolver = pair.getValue();
+
+        if (result == null) {
+            throw new SPFException("Error: no solver could parse or solve the path condition: " + pc + "\n");
         }
 
         if (SymbolicInstructionFactory.debugMode)
@@ -153,15 +157,60 @@ public class SymbolicConstraintsGeneral {
             System.out.println(output);
         }
 
-        if (result == null) {
-            return false;
-        }
         if (result == Boolean.TRUE) {
             return true;
         } else {
             return false;
         }
 
+    }
+
+    /**
+     * Try to solve the given PathCondition using the configured solvers sequentially.
+     * It stops as soon as one solver can parse and return a definite SAT/UNSAT result.
+     *
+     * When Choco is used with other solvers, its UNSAT is skipped
+     * because its limited integer range can give unsound UNSAT results.
+     *
+     * @param pc the PathCondition to solve
+     * @return a Pair of Boolean result and the solver instance that solved the PC.
+     **/
+    public Pair<Boolean, ProblemGeneral> checkPathConditionSequentially(PathCondition pc) {
+        Boolean res = null;
+        ProblemGeneral solver = null;
+        for(int i = 0; i < solvers.size() && res == null; i++) {
+            solver = solvers.get(i);
+            if (SymbolicInstructionFactory.debugMode) {
+                System.out.println("Using solver: " + solver.getClass().getSimpleName());
+            }
+            try {
+                ProblemGeneral tempPb = PCParser.parse(pc, solver);
+                if (tempPb == null) {
+                    res = Boolean.FALSE;
+                } else {
+                    // YN: z3 optimize
+                    if (Observations.lastObservedSymbolicExpression != null) {
+                        if (solver instanceof ProblemZ3Optimize) {
+                            ((ProblemZ3Optimize) solver).maximize(
+                                    PCParser.getExpression((IntegerExpression) Observations.lastObservedSymbolicExpression));
+                        }
+                    }
+                    res = solver.solve();
+                    // Choco uses a reduced integer range [-21474836, 21474836].
+                    // UNSAT results may be unsound for verification. skip when multiple solvers are available.
+                    if (solvers.size() > 1 && solver instanceof ProblemChoco && res == false) {
+                        res = null;
+                    }
+                }
+            } catch (Exception e) {
+                if (SymbolicInstructionFactory.debugMode) {
+                    System.out.println("Exception in parsing or solving with solver"
+                            + solver.getClass().getSimpleName() + ":" + e
+                    );
+                }
+            }
+        }
+        return new Pair<Boolean, ProblemGeneral>(res, solver);
     }
 
     public boolean isSatisfiableGreen(PathCondition pc) {
@@ -187,16 +236,19 @@ public class SymbolicConstraintsGeneral {
     }
 
     public void cleanup() {
-        if (pb instanceof ProblemCVC3) {
-            ((ProblemCVC3) pb).cleanup();
-        } else if (pb instanceof ProblemCoral) {
-            ((ProblemCoral) pb).cleanup();
-        } else if (pb instanceof ProblemZ3) {
-            ((ProblemZ3) pb).cleanup();
-        } else if (pb instanceof ProblemZ3BitVector) {
-            ((ProblemZ3BitVector) pb).cleanup();
-        } else if (pb instanceof ProblemZ3Optimize) {
-            ((ProblemZ3Optimize) pb).cleanup();
+        if (solvers == null) return;
+        for (ProblemGeneral pb : solvers) {
+            if (pb instanceof ProblemCVC3) {
+                ((ProblemCVC3) pb).cleanup();
+            } else if (pb instanceof ProblemCoral) {
+                ((ProblemCoral) pb).cleanup();
+            } else if (pb instanceof ProblemZ3) {
+                ((ProblemZ3) pb).cleanup();
+            } else if (pb instanceof ProblemZ3BitVector) {
+                ((ProblemZ3BitVector) pb).cleanup();
+            } else if (pb instanceof ProblemZ3Optimize) {
+                ((ProblemZ3Optimize) pb).cleanup();
+            }
         }
     }
 
@@ -207,8 +259,8 @@ public class SymbolicConstraintsGeneral {
         if (pc == null || pc.count == 0)
             return true;
 
-        String[] dp = SymbolicInstructionFactory.dp;
-        if (dp[0].equalsIgnoreCase("no_solver"))
+        List<String> dp = SymbolicInstructionFactory.dp;
+        if (dp.contains("no_solver"))
             return true;
 
         if (isSatisfiable(pc)) {
@@ -232,10 +284,10 @@ public class SymbolicConstraintsGeneral {
                     Entry<SymbolicReal, Object> e = i_real.next();
                     SymbolicReal pcVar = e.getKey();
                     Object dpVar = e.getValue();
-                    pcVar.solution = pb.getRealValue(dpVar); // may be undefined: throws an exception
+                    pcVar.solution = resultSolver.getRealValue(dpVar); // may be undefined: throws an exception
                 }
             } catch (Exception exp) {
-                this.catchBody(PCParser.symRealVar, pb, pc);
+                this.catchBody(PCParser.symRealVar, resultSolver, pc);
             } // end catch
 
             // compute solutions for integer variables
@@ -244,7 +296,7 @@ public class SymbolicConstraintsGeneral {
             // try {
             while (i_int.hasNext()) {
                 Entry<SymbolicInteger, Object> e = i_int.next();
-                e.getKey().solution = pb.getIntValue(e.getValue());
+                e.getKey().solution = resultSolver.getIntValue(e.getValue());
 
             }
             // }
@@ -319,8 +371,8 @@ public class SymbolicConstraintsGeneral {
             return result;
         }
 
-        String[] dp = SymbolicInstructionFactory.dp;
-        if (dp[0].equalsIgnoreCase("no_solver")) {
+        List<String> dp = SymbolicInstructionFactory.dp;
+        if (dp.contains("no_solver")) {
             return result;
         }
 
@@ -337,12 +389,12 @@ public class SymbolicConstraintsGeneral {
                     Entry<SymbolicReal, Object> e = i_real.next();
                     SymbolicReal pcVar = e.getKey();
                     Object dpVar = e.getValue();
-                    double e_value = pb.getRealValue(dpVar); // may be undefined: throws an exception
+                    double e_value = resultSolver.getRealValue(dpVar); // may be undefined: throws an exception
                     pcVar.solution = e_value; 
                     result.put(pcVar.getName(), e_value);
                 }
             } catch (Exception exp) {
-                this.catchBody(PCParser.symRealVar, pb, pc);
+                this.catchBody(PCParser.symRealVar, resultSolver, pc);
             }
 
             // compute solutions for integer variables
@@ -351,7 +403,7 @@ public class SymbolicConstraintsGeneral {
             // try {
             while (i_int.hasNext()) {
                 Entry<SymbolicInteger, Object> e = i_int.next();
-                long e_value = pb.getIntValue(e.getValue());
+                long e_value = resultSolver.getIntValue(e.getValue());
                 e.getKey().solution = e_value;
                 result.put(e.getKey().getName(), e_value);
 

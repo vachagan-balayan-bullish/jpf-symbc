@@ -1,0 +1,9 @@
+target=sequential.SequentialTest1
+
+classpath=${jpf-symbc}/build/examples
+sourcepath=${jpf-symbc}/src/examples
+
+symbolic.dp=z3,choco
+symbolic.dp_timeout_ms=5000
+
+symbolic.debug=true

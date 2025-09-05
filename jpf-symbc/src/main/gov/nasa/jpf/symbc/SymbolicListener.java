@@ -70,6 +70,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Vector;
+import java.util.List;
 
 public class SymbolicListener extends PropertyListenerAdapter implements PublisherExtension {
 
@@ -611,8 +612,8 @@ public class SymbolicListener extends PropertyListenerAdapter implements Publish
     // -------- the publisher interface
     @Override
     public void publishFinished(Publisher publisher) {
-        String[] dp = SymbolicInstructionFactory.dp;
-        if (dp[0].equalsIgnoreCase("no_solver") || dp[0].equalsIgnoreCase("cvc3bitvec"))
+        List<String> dp = SymbolicInstructionFactory.dp;
+        if (dp.contains("no_solver") || dp.contains("cvc3bitvec"))
             return;
 
         PrintWriter pw = publisher.getOut();

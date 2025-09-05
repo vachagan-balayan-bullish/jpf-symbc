@@ -27,6 +27,8 @@ import gov.nasa.jpf.vm.Instruction;
 import gov.nasa.jpf.vm.StackFrame;
 import gov.nasa.jpf.vm.ThreadInfo;
 
+import java.util.List;
+
 // we should factor out some of the code and put it in a parent class for all "if statements"
 
 /**
@@ -47,14 +49,14 @@ public class IFNE extends gov.nasa.jpf.jvm.bytecode.IFNE {
             return super.execute(ti);
         } else { // the condition is symbolic
 
-            String[] dp = SymbolicInstructionFactory.dp;
+            List<String> dp = SymbolicInstructionFactory.dp;
 
             ChoiceGenerator<?> cg;
 
             if (!ti.isFirstStepInsn()) { // first time around
                 if (SymbolicInstructionFactory.collect_constraints)
                     cg = new PCChoiceGenerator(1);
-                else if (dp[0].equalsIgnoreCase("omega")) // hack because omega does not handle not or or correctly
+                else if (dp.contains("omega")) // hack because omega does not handle not or or correctly
                     cg = new PCChoiceGenerator(3);
                 else
                     cg = new PCChoiceGenerator(2);
@@ -93,7 +95,7 @@ public class IFNE extends gov.nasa.jpf.jvm.bytecode.IFNE {
             assert pc != null;
 
             if (conditionValue) {
-                if (dp[0].equalsIgnoreCase("omega")) {// hack
+                if (dp.contains("omega")) {// hack
                     if ((Integer) cg.getNextChoice() == 1)
                         pc._addDet(Comparator.GT, sym_v, 0);
                     else {// 2
