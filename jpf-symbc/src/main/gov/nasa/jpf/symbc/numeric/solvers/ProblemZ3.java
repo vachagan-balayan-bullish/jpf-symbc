@@ -975,7 +975,8 @@ public class ProblemZ3 extends ProblemGeneral {
 
 	@Override
 	public Object and(long value, Object exp) {
-		throw new RuntimeException("## Error Z3 \n");
+		// hardcoded this to 64 because in config the bitvector length is set to 64
+		return ctx.mkBVAND(toBV(ctx, (Expr<?>) exp, 64), ctx.mkBV(value, 64));
 	}
 
 	@Override
@@ -1065,8 +1066,22 @@ public class ProblemZ3 extends ProblemGeneral {
 
 	@Override
 	public Object mixed(Object exp1, Object exp2) {
-		// TODO Auto-generated method stub
-		throw new RuntimeException("## Error Z3 \n");
+
+		Expr e1 = (Expr) exp1;
+		Expr e2 = (Expr) exp2;
+
+		Sort s1 = e1.getSort();
+		Sort s2 = e2.getSort();
+
+		// Int == Real  →  toReal(Int) == Real
+		if (s1.equals(ctx.getIntSort()) && s2.equals(ctx.getRealSort())) {
+			e1 = ctx.mkInt2Real((IntExpr) e1);
+		}
+		else if (s1.equals(ctx.getRealSort()) && s2.equals(ctx.getIntSort())) {
+			e2 = ctx.mkInt2Real((IntExpr) e2);
+		}
+
+		return ctx.mkEq(e1, e2); // mkEq needs both args to be of the same type.
 	}
 
     @Override
@@ -1077,7 +1092,7 @@ public class ProblemZ3 extends ProblemGeneral {
 	@Override
 	public double getRealValueSup(Object dpVar) {
 		// TODO Auto-generated method stub
-	    throw new RuntimeException("## Error Z3 \n");//return 0;
+	    throw new UnsupportedOperationException("## Error Z3: getRealValueSup not implemented \n");//return 0;
 	}
 
 	@Override
@@ -1205,6 +1220,34 @@ public class ProblemZ3 extends ProblemGeneral {
 	// (e.g., 1.0E-10 → "0.0000000001")
 	private String toPlainDecimalString(double val) {
 		return BigDecimal.valueOf(val).toPlainString();
+	}
+
+	// Helper method for casting into a bitvector
+	public static BitVecExpr toBV(Context ctx, Expr<?> e, int n) {
+		Sort s = e.getSort();
+
+		if (e instanceof IntExpr) {
+			// modulo 2^n
+			return (BitVecExpr) ctx.mkInt2BV(n, (IntExpr) e);
+		}
+
+		if (e instanceof BitVecExpr) {
+			BitVecExpr bv = (BitVecExpr) e;
+			int w = ((BitVecSort) s).getSize();
+			if (w == n) return bv;
+
+			if (w > n) {
+				// in case of an overflow :truncate high bits: take low n bits
+				return (BitVecExpr) ctx.mkExtract(n - 1, 0, bv);
+			} else {
+				// widen: choose policy; usually zero-extend for “bit pattern”
+				int extra = n - w;
+				return (BitVecExpr) ctx.mkZeroExt(extra, bv);
+				// or signed: ctx.mkSignExt(extra, bv)
+			}
+		}
+
+		throw new IllegalArgumentException("Can't convert sort " + s + " to BitVec(" + n + ")");
 	}
 
 }
