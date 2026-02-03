@@ -975,7 +975,6 @@ public class ProblemZ3 extends ProblemGeneral {
 
 	@Override
 	public Object and(long value, Object exp) {
-		// hardcoded this to 64 because in config the bitvector length is set to 64
 		return ctx.mkBVAND(toBV(ctx, (Expr<?>) exp, SymbolicInstructionFactory.bvlength), ctx.mkBV(value, SymbolicInstructionFactory.bvlength));
 	}
 
