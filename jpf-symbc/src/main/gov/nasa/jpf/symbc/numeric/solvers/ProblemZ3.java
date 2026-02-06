@@ -980,52 +980,52 @@ public class ProblemZ3 extends ProblemGeneral {
 
 	@Override
 	public Object and(Object exp, long value) {
-		throw new RuntimeException("## Error Z3 \n");
+		throw new RuntimeException("## Error Z3: and not implemented \n");
 	}
 
 	@Override
 	public Object and(Object exp1, Object exp2) {
-		throw new RuntimeException("## Error Z3 \n");
+		throw new RuntimeException("## Error Z3: and not implemented \n");
 	}
 
 	@Override
 	public Object or(long value, Object exp) {
-		throw new RuntimeException("## Error Z3 \n");
+		throw new RuntimeException("## Error Z3: or not implemented \n");
 	}
 
 	@Override
 	public Object or(Object exp, long value) {
-		throw new RuntimeException("## Error Z3 \n");
+		throw new RuntimeException("## Error Z3: or not implemented \n");
 	}
 
 	@Override
 	public Object or(Object exp1, Object exp2) {
-		throw new RuntimeException("## Error Z3 \n");
+		throw new RuntimeException("## Error Z3: or not implemented \n");
 	}
 
 	@Override
 	public Object xor(long value, Object exp) {
-		throw new RuntimeException("## Error Z3 \n");
+		throw new RuntimeException("## Error Z3: xor not implemented \n");
 	}
 
 	@Override
 	public Object xor(Object exp, long value) {
-		throw new RuntimeException("## Error Z3 \n");
+		throw new RuntimeException("## Error Z3: xor not implemented \n");
 	}
 
 	@Override
 	public Object xor(Object exp1, Object exp2) {
-		throw new RuntimeException("## Error Z3 \n");
+		throw new RuntimeException("## Error Z3: xor not implemented \n");
 	}
 
 	@Override
 	public Object shiftL(long value, Object exp) {
-		throw new RuntimeException("## Error Z3 \n");
+		throw new RuntimeException("## Error Z3: shiftL not implemented \n");
 	}
 
 	@Override
 	public Object shiftL(Object exp, long value) {
-		throw new RuntimeException("## Error Z3 \n");
+		throw new RuntimeException("## Error Z3: shiftL not implemented \n");
 	}
 
 	@Override
@@ -1035,32 +1035,32 @@ public class ProblemZ3 extends ProblemGeneral {
 
 	@Override
 	public Object shiftR(long value, Object exp) {
-		throw new RuntimeException("## Error Z3 \n");
+		throw new RuntimeException("## Error Z3: shiftR not implemented \n");
 	}
 
 	@Override
 	public Object shiftR(Object exp, long value) {
-		throw new RuntimeException("## Error Z3 \n");
+		throw new RuntimeException("## Error Z3: shiftR not implemented \n");
 	}
 
 	@Override
 	public Object shiftR(Object exp1, Object exp2) {
-		throw new RuntimeException("## Error Z3 \n");
+		throw new RuntimeException("## Error Z3: shiftR not implemented \n");
 	}
 
 	@Override
 	public Object shiftUR(long value, Object exp) {
-		throw new RuntimeException("## Error Z3 \n");
+		throw new RuntimeException("## Error Z3: shiftUR not implemented \n");
 	}
 
 	@Override
 	public Object shiftUR(Object exp, long value) {
-		throw new RuntimeException("## Error Z3 \n");
+		throw new RuntimeException("## Error Z3: shiftUR not implemented \n");
 	}
 
 	@Override
 	public Object shiftUR(Object exp1, Object exp2) {
-		throw new RuntimeException("## Error Z3 \n");
+		throw new RuntimeException("## Error Z3: shiftUR not implemented \n");
 	}
 
 	@Override
@@ -1085,7 +1085,7 @@ public class ProblemZ3 extends ProblemGeneral {
 
     @Override
     public double getRealValueInf(Object dpVar) {
-        throw new RuntimeException("## Error Z3 \n");//return 0;
+        throw new RuntimeException("## Error Z3: getRealValueInf not implemented \n");//return 0;
     }
 
 	@Override
@@ -1113,7 +1113,7 @@ public class ProblemZ3 extends ProblemGeneral {
 	@Override
 	public void postLogicalOR(Object[] constraint) {
 		// TODO Auto-generated method stub
-		throw new RuntimeException("## Error Z3 \n");
+		throw new RuntimeException("## Error Z3 : postLogicalOR not implemented\n");
 	}
 
     // Added by Aymeric to support arrays
