@@ -125,7 +125,14 @@ public class SymbolicConstraintsGeneral {
          * work otherwise and the solver gets filled up with wrong assertions,
          * e.g. with Z3.
          */
-        ProblemGeneral tempPb = PCParser.parse(pc, pb);
+        ProblemGeneral tempPb = null;
+
+        try {
+            tempPb = PCParser.parse(pc, pb);
+        } catch (Exception e) {
+            e.printStackTrace();
+            this.result = Boolean.FALSE;
+        }
 
         if (tempPb == null)
             result = Boolean.FALSE;
@@ -139,7 +146,6 @@ public class SymbolicConstraintsGeneral {
                             PCParser.getExpression((IntegerExpression) Observations.lastObservedSymbolicExpression));
                 }
             }
-
             result = pb.solve();
         }
 
