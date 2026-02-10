@@ -125,14 +125,7 @@ public class SymbolicConstraintsGeneral {
          * work otherwise and the solver gets filled up with wrong assertions,
          * e.g. with Z3.
          */
-        ProblemGeneral tempPb = null;
-
-        try {
-            tempPb = PCParser.parse(pc, pb);
-        } catch (Exception e) {
-            e.printStackTrace();
-            this.result = Boolean.FALSE;
-        }
+        ProblemGeneral tempPb = PCParser.parse(pc, pb);
 
         if (tempPb == null)
             result = Boolean.FALSE;

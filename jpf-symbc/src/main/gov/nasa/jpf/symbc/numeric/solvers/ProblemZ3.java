@@ -612,13 +612,20 @@ public class ProblemZ3 extends ProblemGeneral {
 		}
 	}
 
-	public Object rem(Object exp, long value) {// added by corina
-		try{
+	public Object rem(Object exp, long value) {
+		try {
+			IntExpr e1 = (IntExpr) exp;
+			IntExpr e2 = ctx.mkInt(value);
+			IntExpr zero = ctx.mkInt(0);
 
-			return  ctx.mkRem((IntExpr) exp, ctx.mkInt(value));
+			// Java: (dividend < 0) ? -(-dividend % divisor) : (dividend % divisor)
+			return ctx.mkITE(
+					ctx.mkLt(e1, zero),
+					ctx.mkUnaryMinus(ctx.mkMod(ctx.mkUnaryMinus(e1), e2)),
+					ctx.mkMod(e1, e2)
+			);
 		} catch (Exception e) {
-			e.printStackTrace();
-			throw new RuntimeException("## Error Z3: Exception caught in Z3 JNI: \n" + e);
+			throw new RuntimeException("## Error Z3: rem(Object, long) failed.\n" + e);
 		}
 	}
 	public Object rem(long value, Object exp) {// added by corina
@@ -980,118 +987,145 @@ public class ProblemZ3 extends ProblemGeneral {
 
 	@Override
 	public Object and(Object exp, long value) {
-		throw new RuntimeException("## Error Z3: and not implemented \n");
+		throw new RuntimeException("## Error Z3: logical-AND not implemented in z3 \n");
 	}
 
 	@Override
 	public Object and(Object exp1, Object exp2) {
-		throw new RuntimeException("## Error Z3: and not implemented \n");
+		throw new RuntimeException("## Error Z3: logical-AND not implemented in z3\n");
 	}
 
 	@Override
 	public Object or(long value, Object exp) {
-		throw new RuntimeException("## Error Z3: or not implemented \n");
+		throw new RuntimeException("## Error Z3: logical-OR not implemented in solver z3 \n");
 	}
 
 	@Override
 	public Object or(Object exp, long value) {
-		throw new RuntimeException("## Error Z3: or not implemented \n");
+		throw new RuntimeException("## Error Z3: logical-OR not implemented in solver z3 \n");
 	}
 
 	@Override
 	public Object or(Object exp1, Object exp2) {
-		throw new RuntimeException("## Error Z3: or not implemented \n");
+		throw new RuntimeException("## Error Z3: logical-OR not implemented in solver z3 \n");
 	}
 
 	@Override
 	public Object xor(long value, Object exp) {
-		throw new RuntimeException("## Error Z3: xor not implemented \n");
+		throw new RuntimeException("## Error Z3: logical-xor not implemented in solver z3\n");
 	}
 
 	@Override
 	public Object xor(Object exp, long value) {
-		throw new RuntimeException("## Error Z3: xor not implemented \n");
+		throw new RuntimeException("## Error Z3: logical-xor not implemented in solver z3\n");
 	}
 
 	@Override
 	public Object xor(Object exp1, Object exp2) {
-		throw new RuntimeException("## Error Z3: xor not implemented \n");
+		throw new RuntimeException("## Error Z3: logical-xor not implemented in solver z3\n");
 	}
 
 	@Override
 	public Object shiftL(long value, Object exp) {
-		throw new RuntimeException("## Error Z3: shiftL not implemented \n");
+		throw new RuntimeException("## Error Z3: logical-shiftL not implemented in solver z3\n");
 	}
 
 	@Override
 	public Object shiftL(Object exp, long value) {
-		throw new RuntimeException("## Error Z3: shiftL not implemented \n");
+		throw new RuntimeException("## Error Z3: logical-shiftL not implemented in solver z3 \n");
 	}
 
 	@Override
 	public Object shiftL(Object exp1, Object exp2) {
-		throw new RuntimeException("## Error Z3 \n");
+		throw new RuntimeException("## Error Z3: logical-shiftL not implemented in solver z3 \n");
 	}
 
 	@Override
 	public Object shiftR(long value, Object exp) {
-		throw new RuntimeException("## Error Z3: shiftR not implemented \n");
+		throw new RuntimeException("## Error Z3: logical-shiftR not implemented in solver z3 \n");
 	}
 
 	@Override
 	public Object shiftR(Object exp, long value) {
-		throw new RuntimeException("## Error Z3: shiftR not implemented \n");
+		throw new RuntimeException("## Error Z3: logical-shiftR not implemented in solver z3 \n");
 	}
 
 	@Override
 	public Object shiftR(Object exp1, Object exp2) {
-		throw new RuntimeException("## Error Z3: shiftR not implemented \n");
+		throw new RuntimeException("## Error Z3: logical-shiftR not implemented in solver z3 \n");
 	}
 
 	@Override
 	public Object shiftUR(long value, Object exp) {
-		throw new RuntimeException("## Error Z3: shiftUR not implemented \n");
+		throw new RuntimeException("## Error Z3: logical-shiftUR not implemented in solver z3 \n");
 	}
 
 	@Override
 	public Object shiftUR(Object exp, long value) {
-		throw new RuntimeException("## Error Z3: shiftUR not implemented \n");
+		throw new RuntimeException("## Error Z3: logical-shiftUR not implemented in solver z3 \n");
 	}
 
 	@Override
 	public Object shiftUR(Object exp1, Object exp2) {
-		throw new RuntimeException("## Error Z3: shiftUR not implemented \n");
+		throw new RuntimeException("## Error Z3: logical-shiftUR not implemented in solver z3 \n");
 	}
 
 	@Override
 	public Object mixed(Object exp1, Object exp2) {
-
+		// 1. Initial Validation (No trust, no crashes)
+		if (!(exp1 instanceof Expr) || !(exp2 instanceof Expr)) {
+			throw new RuntimeException("## Error Z3 Theory Bridge: mixed() received non-Expr types. "
+					+ "exp1: " + (exp1 != null ? exp1.getClass().getSimpleName() : "null")
+					+ ", exp2: " + (exp2 != null ? exp2.getClass().getSimpleName() : "null"));
+		}
 		Expr e1 = (Expr) exp1;
 		Expr e2 = (Expr) exp2;
 
 		Sort s1 = e1.getSort();
 		Sort s2 = e2.getSort();
 
-		// Int == Real  →  toReal(Int) == Real
+		// Int <-> Real
 		if (s1.equals(ctx.getIntSort()) && s2.equals(ctx.getRealSort())) {
-			e1 = ctx.mkInt2Real((IntExpr) e1);
+			if (e1 instanceof IntExpr) {
+				e1 = ctx.mkInt2Real((IntExpr) e1);
+			}
 		}
 		else if (s1.equals(ctx.getRealSort()) && s2.equals(ctx.getIntSort())) {
-			e2 = ctx.mkInt2Real((IntExpr) e2);
+			if (e2 instanceof IntExpr) {
+				e2 = ctx.mkInt2Real((IntExpr) e2);
+			}
 		}
 
-		return ctx.mkEq(e1, e2); // mkEq needs both args to be of the same type.
+		// Int <-> BitVector
+		else if (s1.equals(ctx.getIntSort()) && s2 instanceof BitVecSort) {
+			if (e1 instanceof IntExpr) {
+				BitVecSort bvSort = (BitVecSort) s2;
+				e1 = ctx.mkInt2BV(bvSort.getSize(), (IntExpr) e1);
+			}
+		}
+		else if (s1 instanceof BitVecSort && s2.equals(ctx.getIntSort())) {
+			if (e2 instanceof IntExpr) {
+				BitVecSort bvSort = (BitVecSort) s1;
+				e2 = ctx.mkInt2BV(bvSort.getSize(), (IntExpr) e2);
+			}
+		}
+		// We check if the sorts are unified before calling mkEq.
+		if (!e1.getSort().equals(e2.getSort())) {
+			throw new RuntimeException("## Error Z3 Sort Mismatch: Bridge failed to unify "
+					+ e1.getSort() + " and " + e2.getSort());
+		}
+		return ctx.mkEq(e1, e2);
 	}
 
     @Override
     public double getRealValueInf(Object dpVar) {
-        throw new RuntimeException("## Error Z3: getRealValueInf not implemented \n");//return 0;
+        throw new RuntimeException("## Error Z3: getRealValueInf not implemented in z3 solver \n");//return 0;
     }
 
 	@Override
 	public double getRealValueSup(Object dpVar) {
 		// TODO Auto-generated method stub
-	    throw new UnsupportedOperationException("## Error Z3: getRealValueSup not implemented \n");//return 0;
+	    throw new UnsupportedOperationException("## Error Z3: getRealValueSup not implemented in z3 solver \n");//return 0;
 	}
 
 	@Override
@@ -1113,7 +1147,7 @@ public class ProblemZ3 extends ProblemGeneral {
 	@Override
 	public void postLogicalOR(Object[] constraint) {
 		// TODO Auto-generated method stub
-		throw new RuntimeException("## Error Z3 : postLogicalOR not implemented\n");
+		throw new RuntimeException("## Error Z3 : postLogicalOR not implemented in solver z3\n");
 	}
 
     // Added by Aymeric to support arrays
