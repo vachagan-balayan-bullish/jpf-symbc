@@ -1072,7 +1072,6 @@ public class ProblemZ3 extends ProblemGeneral {
 
 	@Override
 	public Object mixed(Object exp1, Object exp2) {
-		// 1. Initial Validation (No trust, no crashes)
 		if (!(exp1 instanceof Expr) || !(exp2 instanceof Expr)) {
 			throw new RuntimeException("## Error Z3 Theory Bridge: mixed() received non-Expr types. "
 					+ "exp1: " + (exp1 != null ? exp1.getClass().getSimpleName() : "null")
@@ -1146,7 +1145,6 @@ public class ProblemZ3 extends ProblemGeneral {
 
 	@Override
 	public void postLogicalOR(Object[] constraint) {
-		// TODO Auto-generated method stub
 		throw new RuntimeException("## Error Z3 : postLogicalOR not implemented in solver z3\n");
 	}
 
