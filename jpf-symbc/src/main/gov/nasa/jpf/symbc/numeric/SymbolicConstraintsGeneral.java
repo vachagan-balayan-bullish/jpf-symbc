@@ -139,7 +139,6 @@ public class SymbolicConstraintsGeneral {
                             PCParser.getExpression((IntegerExpression) Observations.lastObservedSymbolicExpression));
                 }
             }
-
             result = pb.solve();
         }
 
