@@ -69,7 +69,7 @@ public class Helper {
 				//	treat boolean as an integer with range [0,1]
 				sym_v = new SymbolicInteger(fullName, 0, 1);
 		}
-		eiRef.setFieldAttr(field, sym_v);
+		if (eiRef.isFrozen()) eiRef.defreeze(); eiRef.setFieldAttr(field, sym_v);
 		return sym_v;
 	}
 
