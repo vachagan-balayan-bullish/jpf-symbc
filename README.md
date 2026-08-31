@@ -47,3 +47,15 @@ You can then try to run some examples by selecting a .jpf file from the "example
 In particular you should select: "run-JPF-symbc" to run Symbolic PathFinder on your example; configuration "run-JPF-symbc-mac" is tailored for Mac; for Windows please change the environment variable in the run configuration to PATH; it should point to the lib directory in your jpf-symbc project.
 
 Good luck!
+
+## Gradle build
+
+`./gradlew build` replaces `ant build` — same artifacts in `build/` (jpf-symbc.jar,
+jpf-symbc-classes.jar, jpf-symbc-annotations.jar). Requires a JDK 8 toolchain (auto-downloaded
+via the foojay resolver if absent) and a built jpf-core, located via (in order):
+
+1. `-Pjpf-core=/path/to/jpf-core`
+2. `JPF_CORE_DIR` env var
+3. `../jpf-core` peer checkout
+
+`ant build` still works.
